@@ -1,0 +1,19 @@
+﻿@page "/grocerylist"
+
+<h3>GroceryList</h3>
+@if(GroceryItems == null)
+{
+	<div class="spinner"></div>
+}
+else
+{
+	<div>
+	@foreach (var groceryItem in GroceryItems)	
+   {
+	   <div>@groceryItem.Description</div>
+	   
+   }
+</div>
+}
+
+
