@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Groceries.API.Models;
+using Groceries.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,9 +21,12 @@ namespace Groceries.API.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, AppDbContext appDbContext)
         {
             _logger = logger;
+            
+            //var firstStore = appDbContext.Set<Store>().Include(x=> x.GroceryItems).Single(x=> x.Id == 1);
+            //firstStore.GroceryItems
         }
 
         [HttpGet]

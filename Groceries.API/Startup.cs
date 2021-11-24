@@ -30,8 +30,12 @@ namespace Groceries.API
         {
 
             services.AddControllers();
+
             services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(Configuration.GetConnectionString("DBConnection")));
+            
+            services.AddScoped<IGroceryItemRepository, GroceryItemRepository>();    
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Groceries.API", Version = "v1" });
