@@ -21,7 +21,7 @@ namespace Groceries.API.Models
             return result.Entity;
         }
 
-        public async void DeleteGroceryItem(int groceryItemId)
+        public async Task<GroceryItem> DeleteGroceryItem(int groceryItemId)
         {
             var result = await _appDbContext.GroceryItems
                 .FirstOrDefaultAsync(g => g.Id == groceryItemId);
@@ -29,7 +29,9 @@ namespace Groceries.API.Models
             {
                 _appDbContext.GroceryItems.Remove(result);
                 await _appDbContext.SaveChangesAsync();
+                return result;
             }
+            return null;
         }
 
         public async Task<GroceryItem> GetGroceryItem(int groceryItemId)
@@ -38,9 +40,26 @@ namespace Groceries.API.Models
                 .FindAsync(groceryItemId);
         }
 
+        public async Task<GroceryItem> GetGroceryItemByDesc(string description)
+        {
+            return await _appDbContext.GroceryItems
+                .FirstOrDefaultAsync(g => g.Description == description);
+        }
+
         public async Task<IEnumerable<GroceryItem>> GetGroceryItems()
         {
             return await _appDbContext.GroceryItems.ToListAsync();
+        }
+
+        public async Task<IEnumerable<GroceryItem>> Search(string description)
+        {
+            IQueryable<GroceryItem> query = _appDbContext.GroceryItems;
+
+            if(!string.IsNullOrEmpty(description))
+            {
+                query = query.Where(g => g.Description.Contains(description));
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<GroceryItem> UpdateGroceryItem(GroceryItem groceryItem)
@@ -49,7 +68,10 @@ namespace Groceries.API.Models
                 .FirstOrDefaultAsync(g => g.Id == groceryItem.Id);
             if (result != null)
             {
-                result = groceryItem;
+                result.Description = groceryItem.Description;
+                result.Frequency = groceryItem.Frequency;
+                result.Order = groceryItem.Order;
+               
                 await _appDbContext.SaveChangesAsync();
             }
             return result;
