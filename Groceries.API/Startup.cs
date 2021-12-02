@@ -1,4 +1,5 @@
 using Groceries.API.Interfaces;
+using Groceries.API.Mappings;
 using Groceries.API.Models;
 using Groceries.API.Services;
 using Microsoft.AspNetCore.Builder;
@@ -40,6 +41,7 @@ namespace Groceries.API
 
             services.AddScoped<IGroceryItemRepository, GroceryItemRepository>();
 
+            services.AddAutoMapper(typeof(Maps));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Groceries.API", Version = "v1" });
