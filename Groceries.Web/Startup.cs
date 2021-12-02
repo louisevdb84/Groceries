@@ -1,4 +1,5 @@
 using Groceries.Web.Data;
+using Groceries.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
@@ -29,6 +30,12 @@ namespace Groceries.Web
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
+            services.AddHttpClient<IGroceryItemService, GroceryItemService>(client =>
+            {;
+                client.BaseAddress = new Uri("https://localhost:44392");
+
+            }
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

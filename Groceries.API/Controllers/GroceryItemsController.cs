@@ -1,4 +1,5 @@
-﻿using Groceries.API.Models;
+﻿using Groceries.API.Interfaces;
+using Groceries.API.Models;
 using Groceries.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,12 @@ namespace Groceries.API.Controllers
     public class GroceryItemsController : ControllerBase
     {
         private readonly IGroceryItemRepository _groceryItemRepo;
+        private readonly ILoggerService _logger;
 
-        public GroceryItemsController(IGroceryItemRepository groceryItemRepository)
+        public GroceryItemsController(IGroceryItemRepository groceryItemRepository, ILoggerService logger)
         {
             _groceryItemRepo = groceryItemRepository;
+            _logger = logger;
         }
 
         [HttpGet("search")]
@@ -28,7 +31,7 @@ namespace Groceries.API.Controllers
             {
                 var result = await _groceryItemRepo.Search(description);
 
-                if(result.Any())
+                if (result.Any())
                 {
                     return Ok(result);
                 }
@@ -41,10 +44,14 @@ namespace Groceries.API.Controllers
                 "Error retrieving data from the database");
             }
         }
-
+        /// <summary>
+        /// Get list of groceries 
+        /// </summary>
+        /// <returns>List of groceries</returns>
         [HttpGet]
         public async Task<ActionResult> GetGroceryItems()
         {
+            _logger.LogInfo("Accessed Get GroceryItems");
             try
             {
                 return Ok(await _groceryItemRepo.GetGroceryItems());
@@ -56,7 +63,11 @@ namespace Groceries.API.Controllers
             }
 
         }
-
+        /// <summary>
+        /// Gets a grocery item
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("{id:int}")]
         public async Task<ActionResult<GroceryItem>> GetGroceryItem(int id)
         {
@@ -79,12 +90,12 @@ namespace Groceries.API.Controllers
         {
             try
             {
-                if(groceryItem == null)
+                if (groceryItem == null)
                 {
-                    return BadRequest();                    
+                    return BadRequest();
                 }
 
-                if(_groceryItemRepo.GetGroceryItemByDesc(groceryItem.Description) != null)
+                if (_groceryItemRepo.GetGroceryItemByDesc(groceryItem.Description) != null)
                 {
                     ModelState.AddModelError("Grocery Item", "Grocery Item already added");
                     return BadRequest(ModelState);
@@ -116,7 +127,7 @@ namespace Groceries.API.Controllers
                     return NotFound($"Grocery Item with Id = {id} not found");
 
                 return await _groceryItemRepo.UpdateGroceryItem(item);
-                
+
             }
             catch (Exception)
             {
@@ -133,13 +144,13 @@ namespace Groceries.API.Controllers
             try
             {
                 var itemToDelete = await _groceryItemRepo.GetGroceryItem(id);
-                if(itemToDelete==null)
+                if (itemToDelete == null)
                 {
                     return NotFound("Grocery item to delete was not found");
                 }
                 return await _groceryItemRepo.DeleteGroceryItem(id);
 
-                
+
 
             }
             catch (Exception)

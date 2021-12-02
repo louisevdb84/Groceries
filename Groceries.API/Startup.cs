@@ -1,4 +1,6 @@
+using Groceries.API.Interfaces;
 using Groceries.API.Models;
+using Groceries.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -11,7 +13,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Groceries.API
@@ -33,13 +37,19 @@ namespace Groceries.API
 
             services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(Configuration.GetConnectionString("DBConnection")));
-            
-            services.AddScoped<IGroceryItemRepository, GroceryItemRepository>();    
-            
+
+            services.AddScoped<IGroceryItemRepository, GroceryItemRepository>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Groceries.API", Version = "v1" });
+                var xfile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xpath = Path.Combine(AppContext.BaseDirectory, xfile);
+                c.IncludeXmlComments(xpath);
             });
+
+            services.AddSingleton<ILoggerService, LoggerService>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,7 +59,11 @@ namespace Groceries.API
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Groceries.API v1"));
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Groceries.API v1");
+                    //c.RoutePrefix = "";
+                });
             }
 
             app.UseHttpsRedirection();

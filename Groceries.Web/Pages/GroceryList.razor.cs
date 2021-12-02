@@ -1,53 +1,25 @@
 ﻿using Groceries.Models;
+using Groceries.Web.Services;
+using Microsoft.AspNetCore.Components;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Groceries.Web.Pages
 {
     public partial class GroceryList
     {
-        protected override async Task OnInitializedAsync()
-        {
-            await Task.Run(LoadEmployees);
-            //return base.OnInitializedAsync();
-        }
+        [Inject]
+        public IGroceryItemService GroceryItemService { get; set; }
+      
         public IEnumerable<GroceryItem> GroceryItems { get; set; }
 
-        private void LoadEmployees()
+        protected override async Task OnInitializedAsync()
         {
-            System.Threading.Thread.Sleep(3000);
+            GroceryItems = (await GroceryItemService.GetGroceryItems()).ToList();
 
-            GroceryItem g1 = new GroceryItem
-            {
-                Frequency = Frequency.Weekly,
-                Description = "Bread",
-                Id = 1, 
-                Order = 1,
-               
-                
-            };
-            GroceryItem g2 = new GroceryItem
-            {
-                Frequency = Frequency.Weekly,
-                Description = "Milk",
-                Id = 2,
-                Order = 1,
-               
-
-            };
-            GroceryItem g3 = new GroceryItem
-            {
-                Frequency = Frequency.Weekly,
-                Description = "Sugar",
-                Id = 3,
-                Order = 1,
-               
-
-            };
-           GroceryItems = new List<GroceryItem> { g1, g2, g3};
         }
-
       
     }
 }
