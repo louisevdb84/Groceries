@@ -8,73 +8,46 @@ namespace Groceries.API.Models
 {
     public class GroceryItemRepository : IGroceryItemRepository
     {
-        private readonly AppDbContext _appDbContext;
+        private readonly AppDbContext _db;
 
         public GroceryItemRepository(AppDbContext appDbContext)
         {
-            _appDbContext = appDbContext;
-        }
-        public async Task<GroceryItem> AddGroceryItem(GroceryItem groceryItem)
-        {
-            var result = await _appDbContext.GroceryItems.AddAsync(groceryItem);
-            await _appDbContext.SaveChangesAsync();
-            return result.Entity;
+            _db = appDbContext;
         }
 
-        public async Task<GroceryItem> DeleteGroceryItem(int groceryItemId)
+        public async Task<bool> Create(GroceryItem entity)
         {
-            var result = await _appDbContext.GroceryItems
-                .FirstOrDefaultAsync(g => g.Id == groceryItemId);
-            if(result != null)
-            {
-                _appDbContext.GroceryItems.Remove(result);
-                await _appDbContext.SaveChangesAsync();
-                return result;
-            }
-            return null;
+            await _db.GroceryItems.AddAsync(entity);
+            return await Save();
         }
 
-        public async Task<GroceryItem> GetGroceryItem(int groceryItemId)
+        public async Task<bool> Delete(GroceryItem entity)
         {
-            return await _appDbContext.GroceryItems
-                .FindAsync(groceryItemId);
+            _db.GroceryItems.Remove(entity);
+            return await Save();
         }
 
-        public async Task<GroceryItem> GetGroceryItemByDesc(string description)
+        public async Task<IList<GroceryItem>> FindAll()
         {
-            return await _appDbContext.GroceryItems
-                .FirstOrDefaultAsync(g => g.Description == description);
+           return await _db.GroceryItems.ToListAsync();
         }
 
-        public async Task<IEnumerable<GroceryItem>> GetGroceryItems()
+        public async Task<GroceryItem> FindById(int id)
         {
-            return await _appDbContext.GroceryItems.ToListAsync();
+            return await _db.GroceryItems.FindAsync(id);
         }
 
-        public async Task<IEnumerable<GroceryItem>> Search(string description)
+        public async Task<bool> Save()
         {
-            IQueryable<GroceryItem> query = _appDbContext.GroceryItems;
-
-            if(!string.IsNullOrEmpty(description))
-            {
-                query = query.Where(g => g.Description.Contains(description));
-            }
-            return await query.ToListAsync();
+            var changes = await _db.SaveChangesAsync();
+            return changes > 0;
         }
 
-        public async Task<GroceryItem> UpdateGroceryItem(GroceryItem groceryItem)
+        public async Task<bool> Update(GroceryItem entity)
         {
-            var result = await _appDbContext.GroceryItems
-                .FirstOrDefaultAsync(g => g.Id == groceryItem.Id);
-            if (result != null)
-            {
-                result.Description = groceryItem.Description;
-                result.Frequency = groceryItem.Frequency;
-                result.Order = groceryItem.Order;
-               
-                await _appDbContext.SaveChangesAsync();
-            }
-            return result;
+            _db.GroceryItems.Update(entity);
+            return await Save();
         }
     }
+
 }
