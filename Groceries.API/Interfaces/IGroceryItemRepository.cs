@@ -8,6 +8,7 @@ namespace Groceries.API.Models
 {
     public interface IGroceryItemRepository : IRepositoryBase<GroceryItem>
     {
+        Task<GroceryItem> GetGroceryItemByDesc(string description);
         
     }
 }

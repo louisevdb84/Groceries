@@ -9,6 +9,7 @@ namespace Groceries.API.Mappings
         public Maps()
         {
             CreateMap<GroceryItem, GroceryItemDto>().ReverseMap();
+            CreateMap<GroceryItem, CreateGroceryItemDto>().ReverseMap();
             CreateMap<Store, StoreDto>().ReverseMap();  
         }
         

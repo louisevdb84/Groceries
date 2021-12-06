@@ -1,4 +1,6 @@
-﻿using Groceries.API.Interfaces;
+﻿using AutoMapper;
+using Groceries.API.Dtos;
+using Groceries.API.Interfaces;
 using Groceries.API.Models;
 using Groceries.Models;
 using Microsoft.AspNetCore.Http;
@@ -17,47 +19,37 @@ namespace Groceries.API.Controllers
     {
         private readonly IGroceryItemRepository _groceryItemRepo;
         private readonly ILoggerService _logger;
+        private readonly IMapper _mapper;
 
-        public GroceryItemsController(IGroceryItemRepository groceryItemRepository, ILoggerService logger)
+        public GroceryItemsController(
+            IGroceryItemRepository groceryItemRepository, 
+            ILoggerService logger,
+            IMapper mapper)
         {
             _groceryItemRepo = groceryItemRepository;
             _logger = logger;
+            _mapper = mapper;
         }
 
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<GroceryItem>>> Search(string description)
-        {
-            try
-            {
-                var result = await _groceryItemRepo.Search(description);
-
-                if (result.Any())
-                {
-                    return Ok(result);
-                }
-                return NotFound();
-            }
-            catch (Exception)
-            {
-
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                "Error retrieving data from the database");
-            }
-        }
+       
         /// <summary>
-        /// Get list of groceries 
+        /// Get list of all groceries 
         /// </summary>
         /// <returns>List of groceries</returns>
         [HttpGet]
-        public async Task<ActionResult> GetGroceryItems()
-        {
-            _logger.LogInfo("Accessed Get GroceryItems");
+        public async Task<IActionResult> GetGroceryItems()
+        {           
             try
             {
-                return Ok(await _groceryItemRepo.GetGroceryItems());
+                _logger.LogInfo("Accessed Get GroceryItems");
+                var groceryitems = await _groceryItemRepo.FindAll();
+                var response = _mapper.Map<IList<GroceryItemDto>>(groceryitems);
+                _logger.LogInfo("Success");
+                return Ok(response);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                _logger.LogError($"{e.Message} - {e.InnerException}");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Error retrieving data from the database");
             }
@@ -68,14 +60,16 @@ namespace Groceries.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<GroceryItem>> GetGroceryItem(int id)
         {
             try
             {
-                var result = await _groceryItemRepo.GetGroceryItem(id);
+                var result = await _groceryItemRepo.FindById(id);
                 if (result == null) return NotFound();
-                return result;
+                var response = _mapper.Map<GroceryItemDto>(result);               
+               
+                return Ok(response);
             }
             catch (Exception)
             {
@@ -86,26 +80,39 @@ namespace Groceries.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<GroceryItem>> CreateGroceryItem(GroceryItem groceryItem)
+        public async Task<ActionResult<GroceryItem>> CreateGroceryItem([FromBody]CreateGroceryItemDto groceryItemDto)
         {
             try
             {
-                if (groceryItem == null)
+                if (groceryItemDto == null)
                 {
-                    return BadRequest();
+                    _logger.LogWarn("Empty groceryitem");
+                    return BadRequest(ModelState);
                 }
 
-                if (_groceryItemRepo.GetGroceryItemByDesc(groceryItem.Description) != null)
+                if (await _groceryItemRepo.GetGroceryItemByDesc(groceryItemDto.Description) != null)
                 {
+                    _logger.LogWarn("Item already exists");
                     ModelState.AddModelError("Grocery Item", "Grocery Item already added");
                     return BadRequest(ModelState);
                 }
-                var createdItem = await _groceryItemRepo.AddGroceryItem(groceryItem);
-                Console.WriteLine(nameof(GetGroceryItem));
-                return CreatedAtAction(nameof(GetGroceryItem),
-                    new { id = createdItem.Id }, createdItem);
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarn("Data incomplete");
+                    return BadRequest(ModelState);
+                }
+                var groceryItem = _mapper.Map<GroceryItem>(groceryItemDto);
+                   
+                var isSuccessful = await _groceryItemRepo.Create(groceryItem);
+                if(!isSuccessful)
+                {
+                    _logger.LogWarn("Author creating failed");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                     "Error creating new record");
+                }
+                return Created("Created", new { groceryItem });
             }
-            catch (Exception)
+            catch (Exception e)
             {
 
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -113,20 +120,27 @@ namespace Groceries.API.Controllers
             }
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<GroceryItem>> UpdateGroceryItem(int id, GroceryItem item)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<GroceryItem>> UpdateGroceryItem(int id, [FromBody] CreateGroceryItemDto groceryItemDto)
         {
             try
             {
-                if (id != item.Id)
-                    return BadRequest("GroceryItem ID mismatch");
+                if (id < 1 || groceryItemDto == null)
+                    return BadRequest();
+                if(!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-                var itemToUpdate = await _groceryItemRepo.GetGroceryItem(id);
+                var groceryItem = _mapper.Map<GroceryItem>(groceryItemDto);
 
-                if (itemToUpdate == null)
-                    return NotFound($"Grocery Item with Id = {id} not found");
+                var isSuccess = await _groceryItemRepo.Update(groceryItem);
 
-                return await _groceryItemRepo.UpdateGroceryItem(item);
+                if (!isSuccess)
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                     "Error updating data");
+
+                return NoContent();
 
             }
             catch (Exception)
@@ -137,18 +151,23 @@ namespace Groceries.API.Controllers
             }
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id}")]
 
         public async Task<ActionResult<GroceryItem>> DeleteGroceryItem(int id)
         {
             try
             {
-                var itemToDelete = await _groceryItemRepo.GetGroceryItem(id);
+                if (id < 1)
+                    return BadRequest();
+                var itemToDelete = await _groceryItemRepo.FindById(id);
                 if (itemToDelete == null)
-                {
-                    return NotFound("Grocery item to delete was not found");
-                }
-                return await _groceryItemRepo.DeleteGroceryItem(id);
+                    return NotFound();
+                var isSuccess = await _groceryItemRepo.Delete(itemToDelete);
+                if(!isSuccess)
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   "Error deleting data");
+
+                return NoContent();
 
 
 

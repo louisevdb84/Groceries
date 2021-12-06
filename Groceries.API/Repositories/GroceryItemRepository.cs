@@ -37,6 +37,12 @@ namespace Groceries.API.Models
             return await _db.GroceryItems.FindAsync(id);
         }
 
+        public async Task<GroceryItem> GetGroceryItemByDesc(string desc)
+        {
+            return  await _db.GroceryItems
+                .FirstOrDefaultAsync(g => g.Description.ToLower() == desc.ToLower());
+        }
+
         public async Task<bool> Save()
         {
             var changes = await _db.SaveChangesAsync();
