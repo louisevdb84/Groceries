@@ -85,7 +85,7 @@ namespace Groceries.API.Controllers
                 , _config["Jwt:Issuer"],
                 claims,
                 null,
-                expires: DateTime.Now.AddHours(5),
+                expires: DateTime.Now.AddMonths(6),
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);

@@ -3,6 +3,7 @@ using Groceries.API.Dtos;
 using Groceries.API.Interfaces;
 using Groceries.API.Models;
 using Groceries.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -80,6 +81,7 @@ namespace Groceries.API.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<GroceryItem>> CreateGroceryItem([FromBody]CreateGroceryItemDto groceryItemDto)
         {
             try
@@ -121,6 +123,7 @@ namespace Groceries.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<ActionResult<GroceryItem>> UpdateGroceryItem(int id, [FromBody] CreateGroceryItemDto groceryItemDto)
         {
             try
@@ -152,7 +155,7 @@ namespace Groceries.API.Controllers
         }
 
         [HttpDelete("{id}")]
-
+        [Authorize]
         public async Task<ActionResult<GroceryItem>> DeleteGroceryItem(int id)
         {
             try
