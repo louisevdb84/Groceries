@@ -40,7 +40,7 @@
     private bool response = true;
     private async Task HandleLogin()
     {
-        //response = await _authRepo.Login(Model);
+        response = await _authRepo.Login(Model);
 
         if (response)
         {
