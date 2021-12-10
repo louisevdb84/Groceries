@@ -1,4 +1,6 @@
+using Groceries.Web.Service;
 using Groceries.Web.Data;
+using Groceries.Web.Interfaces;
 using Groceries.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
@@ -29,7 +31,9 @@ namespace Groceries.Web
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
             services.AddSingleton<WeatherForecastService>();
+            services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
             services.AddHttpClient<IGroceryItemService, GroceryItemService>(client =>
             {;
                 client.BaseAddress = new Uri("https://localhost:44392");

@@ -34,6 +34,37 @@ namespace Groceries.API.Controllers
             _logger = logger;
             _config = config;
         }
+
+        [HttpPost]
+        [Route("register")]
+        public async Task<IActionResult> Register([FromBody] UserDto userDTO)
+        {
+            var location = GetControllerActionNames();
+            try
+            {
+                var username = userDTO.Username;
+                var password = userDTO.Password;
+                _logger.LogInfo($"{location}: Registration Attempt for {username} ");
+                var user = new IdentityUser { Email = username, UserName = username };
+                var result = await _userManager.CreateAsync(user, password);
+
+                if (!result.Succeeded)
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        _logger.LogError($"{location}: {error.Code} {error.Description}");
+                    }
+                    return InternalError($"{location}: {username} User Registration Attempt Failed");
+                }
+                await _userManager.AddToRoleAsync(user, "Customer");
+                return Created("login", new { result.Succeeded });
+            }
+            catch (Exception e)
+            {
+                return InternalError($"{location}: {e.Message} - {e.InnerException}");
+            }
+        }
+
         /// <summary>
         /// User Login Endpoint
         /// </summary>
@@ -41,6 +72,7 @@ namespace Groceries.API.Controllers
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost]
+        [Route("login")]
         public async Task<IActionResult> Login([FromBody] UserDto userDTO)
         {
             var location = GetControllerActionNames();
