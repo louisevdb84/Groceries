@@ -1,0 +1,52 @@
+﻿@page "/groceryitems/"
+
+@inject IGroceryItemRepository _repo
+
+<h3 class="card-title">Index</h3>
+<hr />
+<br />
+@if (Model == null)
+{
+    <LoadingMessage Message="Loading Authors" />
+}
+else
+{
+    @if (Model.Count < 1)
+    {
+        <LoadingMessage Message="There are no authors in the data store.
+                        Click 'Create Author' to Begin " />
+    }
+    else
+    {
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Frequency</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Description</td>
+                        <td>@item.Frequency</td>
+                      
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private IList<GroceryItem>
+    Model;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await _repo.Get(Endpoints.GroceryItemsEndpoint);
+
+    }
+}

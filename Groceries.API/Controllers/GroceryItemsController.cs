@@ -38,6 +38,7 @@ namespace Groceries.API.Controllers
         /// </summary>
         /// <returns>List of groceries</returns>
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetGroceryItems()
         {           
             try
@@ -62,6 +63,7 @@ namespace Groceries.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<GroceryItem>> GetGroceryItem(int id)
         {
             try

@@ -45,12 +45,8 @@ namespace Groceries.Web
 
             services.AddSingleton<WeatherForecastService>();
             services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
-            services.AddHttpClient<IGroceryItemService, GroceryItemService>(client =>
-            {;
-                client.BaseAddress = new Uri("https://localhost:44392");
-
-            }
-            );
+            services.AddTransient<IGroceryItemRepository, GroceryItemRepository>();
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
